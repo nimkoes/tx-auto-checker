@@ -1,12 +1,12 @@
 {
   "domains": [
     {
-      "domain": "example.com",
-      "expected_ip": "93.184.216.34"
+      "domain": "www.tradlinx.com",
+      "expected_ip": "20.196.89.174"
     },
     {
       "domain": "google.com",
-      "expected_ip": "142.250.191.78"
+      "expected_ip": "255.255.255.255"
     }
   ]
 } 
