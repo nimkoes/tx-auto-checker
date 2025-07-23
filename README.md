@@ -48,11 +48,35 @@
 
 #### 설정 방법
 
-1. **슬랙 웹훅 설정**
-   - 슬랙에서 Incoming Webhook을 생성합니다
-   - GitHub Repository의 Settings > Secrets and variables > Actions에서 `SLACK_WEBHOOK_URL` 시크릿을 추가합니다
+1. **슬랙 봇 설정**
+   
+   **슬랙 앱 생성:**
+   1. [Slack API 웹사이트](https://api.slack.com/apps) 접속
+   2. **"Create New App"** 클릭
+   3. **"From scratch"** 선택
+   4. **App Name**: `TX Auto Checker` (또는 원하는 이름)
+   5. **Workspace** 선택 후 **"Create App"** 클릭
+   
+   **봇 토큰 생성:**
+   1. **"OAuth & Permissions"** 메뉴 클릭
+   2. **"Scopes"** 섹션에서 **"Bot Token Scopes"** 추가:
+      - `chat:write` (메시지 전송 권한)
+      - `chat:write.public` (공개 채널에 메시지 전송 권한)
+   3. **"Install to Workspace"** 클릭
+   4. **"Bot User OAuth Token"** 복사 (xoxb-로 시작)
+   
+   **채널 ID 확인:**
+   1. 슬랙 워크스페이스에서 알림을 받을 채널로 이동
+   2. 채널 이름 우클릭 → **"View channel details"**
+   3. **"About"** 탭에서 **"Channel ID"** 복사 (C로 시작하는 ID)
 
-2. **모니터링할 도메인 설정**
+2. **GitHub Secrets 설정**
+   1. GitHub Repository의 **Settings** → **Secrets and variables** → **Actions**
+   2. **"New repository secret"** 버튼으로 다음 시크릿 추가:
+      - **Name**: `SLACK_BOT_TOKEN`, **Value**: 봇 토큰 (xoxb-로 시작)
+      - **Name**: `SLACK_CHANNEL_ID`, **Value**: 채널 ID (C로 시작)
+
+3. **모니터링할 도메인 설정**
    `monitoring/dns/config.json` 파일을 수정하여 모니터링할 도메인과 예상 IP를 설정합니다:
 
    ```json
@@ -70,7 +94,7 @@
    }
    ```
 
-3. **GitHub Actions 활성화**
+4. **GitHub Actions 활성화**
    - Repository를 private으로 설정 (권장)
    - GitHub Actions가 자동으로 활성화됩니다
    - 6시간마다 자동으로 실행되며, 수동 실행도 가능합니다
@@ -82,7 +106,8 @@
 pip install -r monitoring/dns/requirements.txt
 
 # 환경변수 설정 (선택사항)
-export SLACK_WEBHOOK_URL="your_webhook_url"
+export SLACK_BOT_TOKEN="xoxb-your-bot-token"
+export SLACK_CHANNEL_ID="C1234567890"
 
 # DNS 체크 실행
 python monitoring/dns/checker.py
@@ -143,7 +168,8 @@ jobs:
         
     - name: Run {모니터링명} monitoring
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
       run: |
         python monitoring/{모니터링명}/checker.py
 ```
@@ -153,3 +179,4 @@ jobs:
 - GitHub Actions 무료 플랜은 private repo에서 월 2,000분 제한이 있습니다
 - 6시간마다 실행되므로 월 약 120분을 사용합니다
 - 더 자주 실행하려면 유료 플랜을 고려하세요
+- 슬랙 봇은 해당 채널에 초대되어야 메시지를 보낼 수 있습니다

@@ -21,10 +21,13 @@ class DNSChecker:
             config_file = os.path.join(current_dir, "config.json")
         
         self.config_file = config_file
-        self.slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+        self.slack_bot_token = os.getenv('SLACK_BOT_TOKEN')
+        self.slack_channel_id = os.getenv('SLACK_CHANNEL_ID')
         
-        if not self.slack_webhook_url:
-            print("경고: SLACK_WEBHOOK_URL 환경변수가 설정되지 않았습니다.")
+        if not self.slack_bot_token:
+            print("경고: SLACK_BOT_TOKEN 환경변수가 설정되지 않았습니다.")
+        if not self.slack_channel_id:
+            print("경고: SLACK_CHANNEL_ID 환경변수가 설정되지 않았습니다.")
         
         self.load_config()
     
@@ -74,19 +77,36 @@ class DNSChecker:
     
     def send_slack_notification(self, message: str) -> bool:
         """슬랙으로 알림을 보냅니다."""
-        if not self.slack_webhook_url:
-            print("슬랙 웹훅 URL이 설정되지 않아 알림을 보낼 수 없습니다.")
+        if not self.slack_bot_token or not self.slack_channel_id:
+            print("슬랙 봇 토큰 또는 채널 ID가 설정되지 않아 알림을 보낼 수 없습니다.")
             return False
         
+        headers = {
+            "Authorization": f"Bearer {self.slack_bot_token}",
+            "Content-Type": "application/json"
+        }
+        
         payload = {
+            "channel": self.slack_channel_id,
             "text": message
         }
         
         try:
-            response = requests.post(self.slack_webhook_url, json=payload, timeout=10)
+            response = requests.post(
+                "https://slack.com/api/chat.postMessage",
+                headers=headers,
+                json=payload,
+                timeout=10
+            )
+            
             if response.status_code == 200:
-                print("슬랙 알림 전송 성공")
-                return True
+                result = response.json()
+                if result.get('ok'):
+                    print("슬랙 알림 전송 성공")
+                    return True
+                else:
+                    print(f"슬랙 알림 전송 실패: {result.get('error', 'Unknown error')}")
+                    return False
             else:
                 print(f"슬랙 알림 전송 실패: HTTP {response.status_code}")
                 return False
