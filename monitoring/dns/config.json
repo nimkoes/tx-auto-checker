@@ -1,0 +1,12 @@
+{
+  "domains": [
+    {
+      "domain": "example.com",
+      "expected_ip": "93.184.216.34"
+    },
+    {
+      "domain": "google.com",
+      "expected_ip": "142.250.191.78"
+    }
+  ]
+} 
